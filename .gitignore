@@ -1,0 +1,7 @@
+.env
+silver
+raw
+logs
+__pycache__
+config
+.venv
