@@ -25,16 +25,21 @@ grb = ['N/a', 'Unknown\t', 'Unknown', 'NULL', '\t']
 rename_cat = ['N/a\t', 'Tech\t']
 valid_cat = ["Retail", "Tech", "Food", "Finance", 'Unknown', 'NoName',]
 
-schema = StructType([
-    StructField("id", IntegerType(), True),
-    StructField("user_id", IntegerType(), True),
-    StructField("amount", StringType(), True),
-    StructField("category", StringType(), True),
-    StructField("timestamp", StringType(), True),
-    StructField("city", StringType(), True)
-])
+# если кайф, напиши вот так. это SctructType, я же использую метод DDL который отпишу ниже, документация снизу
+# https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.types.StructType.html
 
-df = spark.read.csv(raw_path, header=True)
+# sctructtype_schema = StructType([
+#     StructField("id", IntegerType(), True),
+#     StructField("user_id", IntegerType(), True),
+#     StructField("amount", StringType(), True),
+#     StructField("category", StringType(), True),
+#     StructField("timestamp", StringType(), True),
+#     StructField("city", StringType(), True)
+# ])
+
+ddl_schema = 'id INT, user_id INT, amount STRING, category STRING, timestamp STRING, city STRING'
+
+df = spark.read.csv(raw_path, header=True, schema=ddl_schema) # либо же sctructtype_schema, если зашел метод выше
 
 df = (df
     .withColumn('id', F.col('id').cast(IntegerType()))
