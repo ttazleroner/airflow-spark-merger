@@ -2,6 +2,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 import os
 from pyspark.sql.types import IntegerType, FloatType
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType
 
 spark = SparkSession.builder \
     .appName("Airflow_spark_vmeste") \
@@ -24,7 +25,16 @@ grb = ['N/a', 'Unknown\t', 'Unknown', 'NULL', '\t']
 rename_cat = ['N/a\t', 'Tech\t']
 valid_cat = ["Retail", "Tech", "Food", "Finance", 'Unknown', 'NoName',]
 
-df = spark.read.csv(raw_path, header=True, inferSchema=True)
+schema = StructType([
+    StructField("id", IntegerType(), True),
+    StructField("user_id", IntegerType(), True),
+    StructField("amount", StringType(), True),
+    StructField("category", StringType(), True),
+    StructField("timestamp", StringType(), True),
+    StructField("city", StringType(), True)
+])
+
+df = spark.read.csv(raw_path, header=True)
 
 df = (df
     .withColumn('id', F.col('id').cast(IntegerType()))
