@@ -1,6 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 import os
+from pyspark.sql.types import IntegerType, FloatType
 
 spark = SparkSession.builder \
     .appName("Airflow_spark_vmeste") \
@@ -26,12 +27,24 @@ rename_cat = ['N/a\t', 'Tech\t']
 
 valid_cat = ["Retail", "Tech", "Food", "Finance", 'Unknown', 'NoName',]
 
+df = (df
+    .withColumn('id', F.col('id').cast(IntegerType()))
+    .withColumn('user_id', F.col('user_id').cast(IntegerType()))
+    .withColumn('amount', F.col('amount').cast(IntegerType()))
+    .withColumn('timestamp', F.to_timestamp(F.col('timestamp')))
+    .withColumn('city', F.initcap(F.col('city')))
+    .withColumn('category', F.initcap(F.col('category')))
+    .withColumn("category", F.trim(F.regexp_replace(F.col("category"), r"\t", ""))))
+
+
+
+
 df = df.replace(rn_city, subset=['city'])
 
 df = df.fillna(0, subset=['amount'])
 
 df = df.withColumn('city', F.trim(F.col('city')))\
-            .withColumn('city', F.trim(F.col('category')))
+            .withColumn('category', F.trim(F.col('category')))
 
 df = df.replace(grb, None)
 
@@ -41,7 +54,7 @@ df = df.fillna({'category': 'Unknown'})
 
 df = df.replace(rename_cat, None)
 
-df = df.filter(~F.col('category').isin(valid_cat))
+df = df.filter(F.col('category').isin(valid_cat))
 
 df = df.replace(['',' ', '\t'], None, subset=['category'])
 
