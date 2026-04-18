@@ -38,6 +38,8 @@ valid_cat = ["Retail", "Tech", "Food", "Finance", 'Unknown', 'NoName',]
 #     StructField("city", StringType(), True)
 # ])
 
+spark.conf.set('spark.sql.shuffle.partitions', '8')
+
 ddl_schema = 'id INT, user_id INT, amount STRING, category STRING, timestamp STRING, city STRING'
 
 df = spark.read.csv(raw_path, header=True, schema=ddl_schema) # либо же sctructtype_schema, если зашел метод выше
@@ -50,6 +52,8 @@ df = (df
     .withColumn('city', F.initcap(F.col('city')))
     .withColumn('category', F.initcap(F.col('category')))
     .withColumn("category", F.trim(F.regexp_replace(F.col("category"), r"\t", ""))))
+
+df.persist()
 
 
 df = df.withColumn('city', F.trim(F.col('city')))\
