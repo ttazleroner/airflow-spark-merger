@@ -3,6 +3,7 @@ from pyspark.sql import functions as F
 import os
 from pyspark.sql.types import IntegerType, FloatType
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType
+from pyspark.sql import functions as F
 
 spark = SparkSession.builder \
     .appName("Airflow_spark_vmeste") \
@@ -50,6 +51,7 @@ df = (df
     .withColumn('category', F.initcap(F.col('category')))
     .withColumn("category", F.trim(F.regexp_replace(F.col("category"), r"\t", ""))))
 
+
 df = df.withColumn('city', F.trim(F.col('city')))\
             .withColumn('category', F.trim(F.col('category')))
 
@@ -70,5 +72,17 @@ df = df.dropDuplicates(['id'])
 df.write.mode('overwrite').parquet(out_path)
 
 df.show(20)
+
+df_neebu = (df
+    .groupBy('category')
+    .agg(
+        F.sum('amount').alias('fullSUMMA'),
+        F.count('id').alias('fullTRANS'),
+        F.round(F.avg('amount'), 2).alias('sredniyCHECK')
+    )
+    .orderBy(F.col('fullSUMMA').desc())
+)
+print('отчет:')
+df_neebu.show(20)
 
 spark.stop()
