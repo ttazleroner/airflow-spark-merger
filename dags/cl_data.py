@@ -13,7 +13,7 @@ print('запуск')
 
 raw_path = "/home/jovyan/work/data/raw/dirty_transactions_1gb.csv"
 out_path = "/home/jovyan/work/data/silver/transactions_cleaned.parquet"
-othet_path = "/home/jovyan/work/data/othet/othet_clean.parquet"
+otchet_path = "/home/jovyan/work/data/othet/otchet_clean.parquet"
 
 if not os.path.exists(raw_path):
     print(f'файла нету {raw_path}')
@@ -79,19 +79,16 @@ df.write.mode('overwrite').parquet(out_path)
 
 df.show(20)
 
+df_otchet = df
 
 window_ops = Window.partitionBy('category').orderBy(F.col('amount').desc())
 
-if not os.path.exists(othet_path):
-    print(f'файла нету {othet_path}')
-    exit(1)
-
-df = (df
+df_top = (df_otchet
     .withColumn('level', F.row_number().over(window_ops))
     .filter(F.col('level') <= 3)
 )
 
-df_neebu = (df
+df_neebu = (df_otchet
     .groupBy('category')
     .agg(
         F.sum('amount').alias('fullSUMMA'),
@@ -103,4 +100,7 @@ df_neebu = (df
 print('отчет:')
 df_neebu.show(20)
 
+df_neebu.write.mode('overwrite').parquet(otchet_path)
+
+df.unpersist()
 spark.stop()
