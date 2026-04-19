@@ -16,7 +16,7 @@ print('запуск')
 
 raw_path = "/home/jovyan/work/data/raw/dirty_transactions_1gb.csv"
 out_path = "/home/jovyan/work/data/silver/transactions_cleaned.parquet"
-otchet_path = "/home/jovyan/work/data/othet/otchet_clean.parquet"
+otchet_path = "/home/jovyan/work/data/otchet/otchet_clean.parquet"
 
 if not os.path.exists(raw_path):
     print(f'файла нету {raw_path}')
