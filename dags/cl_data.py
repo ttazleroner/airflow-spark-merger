@@ -8,6 +8,9 @@ from pyspark.sql import Window
 
 spark = SparkSession.builder \
     .appName("Airflow_spark_vmeste") \
+    .config('spark.driver.memory', '2g') \
+    .config('spark.executor.memory', '2g') \
+    .config('spark.shuffle.partitions', '8') \
     .getOrCreate()
 print('запуск')
 
