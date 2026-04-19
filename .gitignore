@@ -1,9 +1,10 @@
 .env
-silver
-raw
+# silver
+# raw
 logs
 __pycache__
 config
 .venv
 otchet
 othet
+data/
