@@ -6,6 +6,7 @@ from pyspark.sql.types import StructType, StructField, StringType, IntegerType, 
 from pyspark.sql import functions as F
 from pyspark.sql import Window
 
+# если у вас вместо ноута кирпич, то лучше забить на настройку памяти, иначе может подвисать
 spark = SparkSession.builder \
     .appName("Airflow_spark_vmeste") \
     .config('spark.driver.memory', '2g') \

@@ -1,26 +1,42 @@
 from airflow.decorators import dag, task
 from airflow.operators.bash import BashOperator
 from datetime import datetime
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from datetime import datetime, timedelta
 
-@dag(
+def_args = {
+    'owner': 'главный',
+    'depends_on_past': False,
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 2,
+    'retry_delay': timedelta(seconds=25)
+}
+
+with DAG(
+    'spark_pipeline',
+    default_args=def_args,
+    schedule_interval=None,
     start_date=datetime(2026, 1, 1),
-    dag_id='bimbimbim',
-    schedule=None,
     catchup=False,
-    tags=['spark', 'bimbim']
-)
-
-def spark_pipeline():
-    
-    run_spark_job = BashOperator(
-        task_id='spark_task',
-        bash_command="docker exec spark_single spark-submit /home/jovyan/work/dags/cl_data.py"
+) as dag:
+    start_task = BashOperator(
+        task_id='start_spark',
+        bash_command= 'echo "додониднид"'
+    )
+    clean_task = BashOperator(
+        task_id='clean_spark',
+        bash_command='docker exec spark_single spark-submit /home/jovyan/work/dags/cl_data.py'
     )
     
-    @task
-    def notify_suc():
-        print('я мячик')
+    def great_msg():
+        print('данные готовы')
     
-    run_spark_job >> notify_suc()
+    end_task = PythonOperator(
+        task_id='end_spark',
+        python_callable=great_msg
+    )
+    
+    start_task >> clean_task >> end_task
 
-spark_pipeline()
