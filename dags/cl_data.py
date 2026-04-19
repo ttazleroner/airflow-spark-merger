@@ -4,6 +4,7 @@ import os
 from pyspark.sql.types import IntegerType, FloatType
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType
 from pyspark.sql import functions as F
+from pyspark.sql import Window
 
 spark = SparkSession.builder \
     .appName("Airflow_spark_vmeste") \
@@ -12,6 +13,7 @@ print('запуск')
 
 raw_path = "/home/jovyan/work/data/raw/dirty_transactions_1gb.csv"
 out_path = "/home/jovyan/work/data/silver/transactions_cleaned.parquet"
+othet_path = "/home/jovyan/work/data/othet/othet_clean.parquet"
 
 if not os.path.exists(raw_path):
     print(f'файла нету {raw_path}')
@@ -76,6 +78,18 @@ df = df.dropDuplicates(['id'])
 df.write.mode('overwrite').parquet(out_path)
 
 df.show(20)
+
+
+window_ops = Window.partitionBy('category').orderBy(F.col('amount').desc())
+
+if not os.path.exists(othet_path):
+    print(f'файла нету {othet_path}')
+    exit(1)
+
+df = (df
+    .withColumn('level', F.row_number().over(window_ops))
+    .filter(F.col('level') <= 3)
+)
 
 df_neebu = (df
     .groupBy('category')
