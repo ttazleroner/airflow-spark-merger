@@ -30,6 +30,11 @@ with DAG(
         bash_command='docker exec spark_single spark-submit /home/jovyan/work/dags/cl_data.py'
     )
     
+    join_task = BashOperator(
+        task_id='join_table',
+        bash_command='docker exec spark_single spark-submit /home/jovyan/work/user/user_data.py'
+    )
+    
     def great_msg():
         print('данные готовы')
     
@@ -38,5 +43,5 @@ with DAG(
         python_callable=great_msg
     )
     
-    start_task >> clean_task >> end_task
+    start_task >> clean_task >> join_task >> end_task
 

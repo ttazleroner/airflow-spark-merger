@@ -36,7 +36,7 @@ df_group = (df_join.groupBy('gender','category')\
 
 join_path = "/home/jovyan/work/data/gold/join_report"
 
-df_group.spark.write.mode('overwrite').parquet()
+df_group.write.mode('overwrite').parquet(join_path)
 
 df_group.show(20)
 
