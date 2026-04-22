@@ -8,3 +8,4 @@ config
 otchet
 othet
 data/
+.minio_data

@@ -34,6 +34,9 @@ services:
       - AIRFLOW__WEBSERVER__SECRET_KEY=d5157558325e4e3c03de9a085796db0b
       - AIRFLOW__WEBSERVER__BASE_URL=http://localhost:8080
       - AIRFLOW__LOGGING__SERVE_LOGS=True
+      - _PIP_ADDITIONAL_DEPENDENCIES=boto3 botocore python-dotenv
+      - MINIO_USER=${MINIO_USER}
+      - MINIO_PASSWORD=${MINIO_PASSWORD}
     ports:
       - "8080:8080"
     command: webserver
@@ -55,6 +58,9 @@ services:
       - AIRFLOW__WEBSERVER__SECRET_KEY=d5157558325e4e3c03de9a085796db0b
       - AIRFLOW__WEBSERVER__BASE_URL=http://localhost:8080
       - AIRFLOW__LOGGING__SERVE_LOGS=True
+      - _PIP_ADDITIONAL_DEPENDENCIES=boto3 botocore python-dotenv
+      - MINIO_USER=${MINIO_USER}
+      - MINIO_PASSWORD=${MINIO_PASSWORD}
     command: scheduler
     user: "${AIRFLOW_UID:-50000}"
 
@@ -71,3 +77,19 @@ services:
       - AIRFLOW__LOGGING__SERVE_LOGS=True
     command: db migrate
     user: "0"
+
+  minio:
+    image: minio/minio
+    container_name: minio_backet
+    env_file:
+      - .env
+    ports:
+      - "${MINIO_PORT}:9000"
+      - "${MINIO_CONSOLE_PORT}:9001"
+    environment:
+      MINIO_ROOT_USER: "${MINIO_USER}"
+      MINIO_ROOT_PASSWORD: "${MINIO_PASSWORD}"
+
+    volumes:
+      - ./.minio_data:/data
+    command: server /data --console-address ":9001"
