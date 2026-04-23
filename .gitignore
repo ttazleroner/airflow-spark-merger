@@ -9,3 +9,4 @@ otchet
 othet
 data/
 .minio_data
+.kafka_data
