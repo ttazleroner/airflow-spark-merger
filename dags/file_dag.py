@@ -55,6 +55,36 @@ def check_file():
     file = [f for f in os.listdir(raw_path) if f.endswith('.csv')]
     return len(file)>0
 
+def kafka_othet_to_minio():
+    endpoint = 'http://minio:9000'
+    minio_key = os.getenv('MINIO_USER')
+    minio_secretkey = os.getenv('MINIO_PASSWORD')
+    bucket2_name = 'silver-transactions'
+    output_path = '/home/jovyan/work/data/silver/transactions'
+
+    s3 = boto3.resource('s3',
+    endpoint_url=endpoint,
+    aws_access_key_id=minio_key,
+    aws_secret_access_key=minio_secretkey,
+    config=Config(signature_version='s3v4'),
+    region_name='us-east-1'
+    )
+    try:
+        s3.meta.client.head_bucket(Bucket=bucket2_name)
+    except:
+        s3.create_bucket(Bucket=bucket2_name)
+
+    if os.path.exists(output_path):
+        files = [f for f in os.listdir(output_path) if f.endswith('.parquet')]
+        print(f"найдено {len(files)} файлов для загрузки в MinIO")
+        for file_name in files:
+            f_path = os.path.join(output_path, file_name)
+            object_key = f"{datetime.now().strftime('%Y-%m-%d')}/{file_name}"
+            s3.Bucket(bucket2_name).upload_file(f_path, object_key)
+            os.remove(f_path)
+        else:
+            print('папка уже существует')
+
 with DAG(
     'spark_pipeline',
     default_args=def_args,
@@ -62,13 +92,30 @@ with DAG(
     start_date=datetime(2026, 1, 1),
     catchup=False,
 ) as dag:
+    
     start_task = BashOperator(
         task_id='start_spark',
         bash_command= 'echo "додониднид"'
     )
+
+    spark_kafka_to_silver = BashOperator(
+        task_id='spark_kafka_to_silver',
+        bash_command='docker exec spark_single spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 /home/jovyan/work/dags/kafka_spark.py'
+    )
+
+    producer_task = BashOperator(
+        task_id='run_producer_to_kafka',
+        bash_command='docker exec spark_single python /home/jovyan/work/kafka_producer.py'
+    )
+
+    archive_kafka = PythonOperator(
+        task_id='archive_kafka',
+        python_callable=kafka_othet_to_minio
+    )
+
     clean_task = BashOperator(
         task_id='clean_spark',
-        bash_command='docker exec spark_single spark-submit /home/jovyan/work/dags/cl_data.py'
+        bash_command='docker exec spark_single spark-submit --driver-memory 2g --executor-memory 2g /home/jovyan/work/dags/cl_data.py'
     )
     
     join_task = BashOperator(
@@ -93,6 +140,9 @@ with DAG(
         task_id='end_spark',
         python_callable=great_msg
     )
-    
-    start_task >> check_task >> clean_task >> join_task >> archive_task >> end_task
 
+    install_libs = BashOperator(
+        task_id='install_libs',
+        bash_command='docker exec spark_single pip install kafka-python-ng'
+    )
+    start_task >> install_libs >>check_task >> producer_task >> spark_kafka_to_silver >> archive_kafka >> clean_task >> join_task >> archive_task >> end_task

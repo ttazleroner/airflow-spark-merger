@@ -15,6 +15,8 @@ spark = SparkSession.builder \
     .getOrCreate()
 print('запуск')
 
+spark.sparkContext.setLogLevel('WARN')
+
 raw_path = "/home/jovyan/work/data/raw/dirty_transactions_1gb.csv"
 out_path = "/home/jovyan/work/data/silver/transactions_cleaned.parquet"
 otchet_path = "/home/jovyan/work/data/otchet/otchet_clean.parquet"
