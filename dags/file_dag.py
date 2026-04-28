@@ -8,6 +8,7 @@ import os
 import boto3
 import dotenv
 from botocore.client import Config
+import shutil
 
 silver_path = "/home/jovyan/work/data/silver/transactions_cleaned.parquet"
 
@@ -19,6 +20,18 @@ def_args = {
     'retries': 2,
     'retry_delay': timedelta(seconds=25)
 }
+
+def csv_recovery():
+    raw_path = '/home/jovyan/work/data/raw/dirty_transactions_1gb.csv'
+    recovery_path = '/home/jovyan/work/data/master/dirty_transactions_1gb.csv'
+    os.makedirs(os.path.dirname(raw_path), exist_ok=True)
+    if os.path.exists(raw_path):
+        try:
+            os.remove(raw_path)
+        except:
+            pass 
+    shutil.copyfile(recovery_path, raw_path)
+
 
 def load_minio():
     endpoint = 'http://minio:9000'
@@ -82,8 +95,8 @@ def kafka_othet_to_minio():
             object_key = f"{datetime.now().strftime('%Y-%m-%d')}/{file_name}"
             s3.Bucket(bucket2_name).upload_file(f_path, object_key)
             os.remove(f_path)
-        else:
-            print('папка уже существует')
+    else:
+        print('папка уже существует')
 
 with DAG(
     'spark_pipeline',
@@ -117,6 +130,11 @@ with DAG(
         task_id='clean_spark',
         bash_command='docker exec spark_single spark-submit --driver-memory 2g --executor-memory 2g /home/jovyan/work/dags/cl_data.py'
     )
+
+    recovery_csv = PythonOperator(
+        task_id='recovery_csv',
+        python_callable=csv_recovery
+    )
     
     join_task = BashOperator(
         task_id='join_table',
@@ -126,6 +144,11 @@ with DAG(
     join_analytics = BashOperator(
         task_id='join_analytics',
         bash_command='docker exec spark_single spark-submit /home/jovyan/work/user/join_ebat.py'
+    )
+
+    clean_checkpoint = BashOperator(
+        task_id='clean_checkpoints',
+        bash_command='docker exec spark_single rm -rf /home/jovyan/work/data/checkpoints/raw_to_silver'
     )
     
     check_task = ShortCircuitOperator(
@@ -150,4 +173,4 @@ with DAG(
         task_id='install_libs',
         bash_command='docker exec spark_single pip install kafka-python-ng'
     )
-    start_task >> install_libs >> check_task >> producer_task >> spark_kafka_to_silver >> archive_kafka >> clean_task >> join_task >> join_analytics >> archive_task >> end_task
+    start_task >> install_libs >> recovery_csv >> clean_checkpoint >> check_task >> producer_task >> spark_kafka_to_silver >> archive_kafka >> clean_task >> join_task >> join_analytics >> archive_task >> end_task
