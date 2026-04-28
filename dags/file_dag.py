@@ -122,6 +122,11 @@ with DAG(
         task_id='join_table',
         bash_command='docker exec spark_single spark-submit /home/jovyan/work/user/user_data.py'
     )
+
+    join_analytics = BashOperator(
+        task_id='join_analytics',
+        bash_command='docker exec spark_single spark-submit /home/jovyan/work/user/join_ebat.py'
+    )
     
     check_task = ShortCircuitOperator(
         task_id='check_spark',
@@ -145,4 +150,4 @@ with DAG(
         task_id='install_libs',
         bash_command='docker exec spark_single pip install kafka-python-ng'
     )
-    start_task >> install_libs >>check_task >> producer_task >> spark_kafka_to_silver >> archive_kafka >> clean_task >> join_task >> archive_task >> end_task
+    start_task >> install_libs >> check_task >> producer_task >> spark_kafka_to_silver >> archive_kafka >> clean_task >> join_task >> join_analytics >> archive_task >> end_task
