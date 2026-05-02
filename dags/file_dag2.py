@@ -47,7 +47,7 @@ with DAG(
 
     streaming_kafka = BashOperator(
         task_id='streaming_kafka',
-        bash_command='docker exec spark_single spark-submit /home/jovyan/work/dags/streaming_kafka.py'
+        bash_command='docker exec spark_single spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 /home/jovyan/work/dags/streaming_kafka.py'
     )
 
     archive_task = PythonOperator(
