@@ -27,9 +27,11 @@ df_winda = df_pars \
     .agg(F.sum('amount').alias('total_sum'), F.count('id').alias('tx_count'))
 
 query = df_winda.writeStream \
-    .outputMode('complete') \
-    .format('console') \
-    .option('truncate', 'false') \
+    .outputMode('append') \
+    .format('parquet') \
+    .option("path", "/home/jovyan/work/data/gold/windowed_stats") \
+    .option("checkpointLocation", "/home/jovyan/work/data/checkpoints/windowed_stats") \
+    .trigger(availableNow=True) \
     .start()
-
+#trigger отработать и съебаться,
 query.awaitTermination()
