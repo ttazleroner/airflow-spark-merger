@@ -35,7 +35,7 @@ df_group = (df_join
 join_analytics = '/home/jovyan/work/data/gold/hourly_activity'
 df_group.write.mode('overwrite').parquet(join_analytics)
 
-print("✅ Код отработал! Проверь папку /data/gold/hourly_activity")
+print(" код готов /data/gold/hourly_activity")
 
 spark.stop()
 

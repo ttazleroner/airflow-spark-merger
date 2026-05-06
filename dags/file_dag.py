@@ -123,6 +123,30 @@ with DAG(
         task_id='clean_checkpoints',
         bash_command='docker exec spark_single rm -rf /home/jovyan/work/data/checkpoints/raw_to_silver'
     )
+
+    iceberg_task = BashOperator(
+        task_id='iceberg_spark_job',
+        bash_command="""
+set -euo pipefail
+
+ICEBERG_DB_PASS="{{ env_var('ICEBERG_DB_PASS', '') }}"
+AWS_ACCESS_KEY_ID="{{ env_var('AWS_ACCESS_KEY_ID', '') }}"
+AWS_SECRET_ACCESS_KEY="{{ env_var('AWS_SECRET_ACCESS_KEY', '') }}"
+
+if [ -z "$ICEBERG_DB_PASS" ]; then
+  echo "ICEBERG_DB_PASS is empty in airflow container env"
+  exit 1
+fi
+
+docker exec -i \
+  -e ICEBERG_DB_PASS="$ICEBERG_DB_PASS" \
+  -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+  -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+  spark_single spark-submit \
+  --packages org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.2,org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.262,org.postgresql:postgresql:42.6.0 \
+  /home/jovyan/work/dags/iceberg_spark.py
+""".strip(),
+    )
     
     check_task = ShortCircuitOperator(
         task_id='check_spark',
@@ -141,4 +165,4 @@ with DAG(
         task_id='install_libs',
         bash_command='docker exec spark_single pip install kafka-python-ng'
     )
-    start_task >> install_libs >> recovery_csv >> clean_checkpoint >> check_task >> producer_task >> spark_kafka_to_silver >> archive_kafka >> clean_task >> join_task >> join_analytics >> end_task
+    start_task >> install_libs >> recovery_csv >> clean_checkpoint >> check_task >> producer_task >> spark_kafka_to_silver >> archive_kafka >> clean_task >> join_task >> join_analytics >> iceberg_task >> end_task
