@@ -44,6 +44,11 @@ with DAG(
     start_date=datetime(2026, 1, 1), 
     catchup=False
 ) as dag_streaming:
+    
+    producer_kafka = BashOperator(
+        task_id='producer_kafka',
+        bash_command='docker exec spark_single spark-submit /home/jovyan/work/kafka_producer.py'
+    )
 
     streaming_kafka = BashOperator(
         task_id='streaming_kafka',
@@ -55,4 +60,4 @@ with DAG(
         python_callable=load_minio
     )
 
-    streaming_kafka >> archive_task
+    producer_kafka >> streaming_kafka >> archive_task

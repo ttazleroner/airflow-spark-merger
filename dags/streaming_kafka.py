@@ -11,6 +11,7 @@ df = spark.readStream \
     .option('kafka.bootstrap.servers', 'kafka_broker:29092') \
     .option('subscribe', 'raw_transactions') \
     .option('startingOffsets', 'earliest') \
+    .option('failOnDataLoss', 'false') \
     .load()
 
 my_schema = 'id INT, user STRING, amount INT, timestamp LONG, category STRING'
