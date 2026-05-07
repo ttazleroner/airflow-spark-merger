@@ -129,19 +129,10 @@ with DAG(
         bash_command="""
 set -euo pipefail
 
-ICEBERG_DB_PASS="{{ env_var('ICEBERG_DB_PASS', '') }}"
-AWS_ACCESS_KEY_ID="{{ env_var('AWS_ACCESS_KEY_ID', '') }}"
-AWS_SECRET_ACCESS_KEY="{{ env_var('AWS_SECRET_ACCESS_KEY', '') }}"
-
-if [ -z "$ICEBERG_DB_PASS" ]; then
-  echo "ICEBERG_DB_PASS is empty in airflow container env"
-  exit 1
-fi
-
 docker exec -i \
   -e ICEBERG_DB_PASS="$ICEBERG_DB_PASS" \
-  -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
-  -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+  -e AWS_ACCESS_KEY_ID="$MINIO_USER" \
+  -e AWS_SECRET_ACCESS_KEY="$MINIO_PASSWORD" \
   spark_single spark-submit \
   --packages org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.2,org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.262,org.postgresql:postgresql:42.6.0 \
   /home/jovyan/work/dags/iceberg_spark.py

@@ -61,7 +61,12 @@ spark.sql("""
 dirty_csv = '/home/jovyan/work/data/raw/dirty_transactions_1gb.csv'
 df = spark.read.option('header', 'true').option('inferSchema', 'true').csv(dirty_csv)
 
-df_clean = df.withColumn('ts', F.current_timestamp()) 
+df_clean = df.select(
+    F.col("id").cast("int").alias("id"),
+    F.col("user_id").cast("string").alias("user"),
+    F.col("amount").cast("double").alias("amount"),
+    F.current_timestamp().alias("ts"),
+)
 
 df_clean.writeTo('demo.db.transactions').append()
 print("даннык внутри")
