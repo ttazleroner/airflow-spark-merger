@@ -11,11 +11,13 @@ ICEBERG_PACKAGES = [
 
 minio_access_key = os.getenv("AWS_ACCESS_KEY_ID", "admin")
 minio_secret_key = os.getenv("AWS_SECRET_ACCESS_KEY", "adminadmin")
+db_pass = os.getenv("ICEBERG_DB_PASS")
 
 spark = SparkSession.builder \
     .appName("IcebergTesting") \
     .config("spark.jars.packages", ",".join(ICEBERG_PACKAGES)) \
     .config("spark.sql.catalog.demo.jdbc.password", db_pass) \
+    .config("spark.sql.catalog.demo.jdbc.schema-version", "V1") \
     \
     .config("spark.sql.catalog.demo", "org.apache.iceberg.spark.SparkCatalog") \
     .config("spark.sql.catalog.demo.type", "jdbc") \
@@ -35,7 +37,7 @@ spark = SparkSession.builder \
 
 spark.sql("""
     CREATE VIEW demo.db.transactions_old AS
-    SELECT custom_name AS user, full_amount AS amount, ts FROM demo.db.transactions
+    SELECT user, amount, ts FROM demo.db.transactions
 """)
 
 spark.sql("""
