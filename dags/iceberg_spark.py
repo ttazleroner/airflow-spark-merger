@@ -72,8 +72,8 @@ df_clean.writeTo('demo.db.transactions').append()
 print("даннык внутри")
 
 #тест данные
-new_data = [(1, 'Prostitutka', 777.0, "2023-10-01 10:00:00"), 
-            (3, 'Pidor', 300.0, "2023-10-01 11:00:00")]
+new_data = [(1, 'Prostitutka', 777.0, "2026-05-01 10:00:00"), 
+            (3, 'Pidor', 300.0, "2026-05-01 11:00:00")]
 columns = ['id', 'user', 'amount', 'ts']
 
 df_updates = spark.createDataFrame(new_data, columns) \
@@ -86,6 +86,11 @@ spark.sql("""
     ON t.id = u.id
     WHEN MATCHED THEN UPDATE SET t.amount = u.amount, t.ts = u.ts
     WHEN NOT MATCHED THEN INSERT *
+""")
+
+spark.sql("""
+    CREATE VIEW demo.db.transactions_old AS
+    SELECT custom_name AS user, full_amount AS amount, ts FROM demo.db.transactions
 """)
 
 print("обслужка")
