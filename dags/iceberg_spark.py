@@ -90,7 +90,7 @@ spark.sql("""
 """)
 
 spark.sql("""
-    CREATE VIEW demo.db.transactions_old AS
+    CREATE OR REPLACE VIEW demo.db.transactions_old AS
     SELECT user, amount, ts FROM demo.db.transactions
 """)
 

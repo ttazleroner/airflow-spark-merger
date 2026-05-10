@@ -2,6 +2,11 @@ from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 import os
 
+
+minio_access_key = os.getenv("AWS_ACCESS_KEY_ID", "admin")
+minio_secret_key = os.getenv("AWS_SECRET_ACCESS_KEY", "adminadmin")
+db_pass = os.getenv("ICEBERG_DB_PASS")
+
 ICEBERG_PACKAGES = [
     "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.2",
     "org.apache.hadoop:hadoop-aws:3.3.4",
@@ -9,9 +14,6 @@ ICEBERG_PACKAGES = [
     "org.postgresql:postgresql:42.6.0"
 ]
 
-minio_access_key = os.getenv("AWS_ACCESS_KEY_ID", "admin")
-minio_secret_key = os.getenv("AWS_SECRET_ACCESS_KEY", "adminadmin")
-db_pass = os.getenv("ICEBERG_DB_PASS")
 
 spark = SparkSession.builder \
     .appName("IcebergTesting") \
@@ -35,21 +37,7 @@ spark = SparkSession.builder \
     .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions") \
     .getOrCreate()
 
-spark.sql("""
-    CREATE OR REPLACE VIEW demo.db.transactions_old AS
-    SELECT user, amount, ts FROM demo.db.transactions
-""")
+spark.sql(f"SELECT snapshot_id, committed_at, operation FROM {table}.snapshots ORDER BY committed_at DESC LIMIT 5").show(truncate=False)
 
-spark.sql("""
-    DESCRIBE demo.db.transactions
-""").show(truncate=False)
-
-spark.sql("""
-    SELECT * FROM demo.db.transactions LIMIT 5
-""").show()
-
-spark.sql("""
-    SELECT file_path, record_count FROM demo.db.transactions.files
-""").show(truncate=False)
-
-spark.sql("SELECT snapshot_id, committed_at, operation FROM demo.db.transactions.snapshots ORDER BY committed_at DESC LIMIT 5").show(truncate=False)
+spark.sql("CALL demo.system.rollback_to_snapshot('db.transactions', 8447883939026536748)") # снапшот в будущем изменяемый
+#SNAPSHOT IN THE FUTURE IS CHANGABLE
