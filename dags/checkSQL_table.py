@@ -51,5 +51,3 @@ spark.sql("""
 spark.sql("""
     SELECT file_path, record_count FROM demo.db.transactions.files
 """).show(truncate=False)
-
-spark.sql("SELECT snapshot_id, committed_at, operation FROM demo.db.transactions.snapshots ORDER BY committed_at DESC LIMIT 5").show(truncate=False)

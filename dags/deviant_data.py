@@ -1,4 +1,4 @@
-# make_disaster.py
+# ONLY FOR LEARNING! THIS FILE CORRUPTS DATA, I CHECKED THE ROLLBACK # ONLY FOR LEARNING! THIS FILE CORRUPTS DATA, I CHECKED THE ROLLBACK
 from pyspark.sql import SparkSession
 import os
 
@@ -36,13 +36,8 @@ spark = SparkSession.builder \
     .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions") \
     .getOrCreate()
 
-# ... твои конфиги SparkSession ...
-spark = SparkSession.builder.getOrCreate()
-
-print("ВНИМАНИЕ: Начинаю порчу данных...")
-# Самый простой способ всё сломать — занулить суммы
 spark.sql("UPDATE demo.db.transactions SET amount = 0")
-print("ДАННЫЕ ИСПОРЧЕНЫ. Все суммы теперь равны 0.")
 
-# Проверяем, что реально всё плохо
 spark.sql("SELECT * FROM demo.db.transactions LIMIT 5").show()
+
+# ONLY FOR LEARNING! THIS FILE CORRUPTS DATA, I CHECKED THE ROLLBACK # ONLY FOR LEARNING! THIS FILE CORRUPTS DATA, I CHECKED THE ROLLBACK

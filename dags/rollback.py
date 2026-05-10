@@ -37,7 +37,7 @@ spark = SparkSession.builder \
     .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions") \
     .getOrCreate()
 
-spark.sql(f"SELECT snapshot_id, committed_at, operation FROM {table}.snapshots ORDER BY committed_at DESC LIMIT 5").show(truncate=False)
+spark.sql(f"SELECT snapshot_id, committed_at, operation FROM demo.db.transactions.snapshots ORDER BY committed_at DESC LIMIT 5").show(truncate=False)
 
 spark.sql("CALL demo.system.rollback_to_snapshot('db.transactions', 8447883939026536748)") # снапшот в будущем изменяемый
 #SNAPSHOT IN THE FUTURE IS CHANGABLE
