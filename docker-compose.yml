@@ -117,3 +117,18 @@ services:
       - KAFKA_NUM_PARTITIONS=3
     volumes:
       - ./.kafka_data:/bitnami/kafka
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.3
+    container_name: clickhouse
+    ports:
+      - "8123:8123"
+      - "9400:9000"
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - ./ch_data:/var/lib/clickhouse
+    networks:
+      - airflow-spark-merger_default
