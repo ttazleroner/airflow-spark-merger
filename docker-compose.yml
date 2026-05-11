@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   spark_single:
@@ -130,5 +129,3 @@ services:
         hard: 262144
     volumes:
       - ./ch_data:/var/lib/clickhouse
-    networks:
-      - airflow-spark-merger_default
