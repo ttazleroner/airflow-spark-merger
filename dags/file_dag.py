@@ -135,6 +135,8 @@ docker exec -i \
   -e AWS_SECRET_ACCESS_KEY="$MINIO_PASSWORD" \
   spark_single spark-submit \
   --packages org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.2,org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.262,org.postgresql:postgresql:42.6.0 \
+  --conf spark.driver.memory=4g \
+  --conf spark.sql.shuffle.partitions=64 \
   /home/jovyan/work/dags/iceberg_spark.py
 """.strip(),
     )

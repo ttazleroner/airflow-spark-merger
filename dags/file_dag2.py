@@ -40,6 +40,7 @@ def load_minio():
 
 with DAG(
     'spark_streaming_scheduler', 
+    max_active_runs=1,
     schedule_interval='*/10 * * * *', 
     start_date=datetime(2026, 1, 1), 
     catchup=False
