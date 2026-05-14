@@ -45,14 +45,14 @@ spark.sql("""
     )
 """)
 
-#FROM CLICKHOUSE
+# FROM CLICKHOUSE
 
-# def write_to_sinks(batch_df, batch_id):
-#     batch_df.writeTo("demo.db.windowed_stats").append()
-#     rows = [row.asDict() for row in batch_df.collect()]
-#     if rows:
-#         client = clickhouse_connect.get_client(host='clickhouse', port=8123)
-#         client.insert('default.windowed_stats_ch', rows)
+def write_to_sinks(batch_df, batch_id):
+    batch_df.writeTo("demo.db.windowed_stats").append()
+    rows = [row.asDict() for row in batch_df.collect()]
+    if rows:
+        client = clickhouse_connect.get_client(host='clickhouse', port=8123)
+        client.insert('default.windowed_stats_ch', rows)
 
 def write_to_sinks(batch_df, batch_id):
     print(f"--- НАЧИНАЮ ЗАПИСЬ БАТЧА {batch_id} ---")
@@ -85,11 +85,18 @@ df_winda = df_pars \
     ) \
     .agg(F.sum('amount').alias('total_sum'), F.count('id').alias('tx_count'))
 
+
 query = df_winda.writeStream \
-    .foreachBatch(write_to_sinks) \
-    .option('checkpointLocation', "s3a://gold-bucket/checkpoints/multi_sink_v5") \
-    .start()
+    .format("clickhouse") \
+    .outputMode("append") \
+    .option("checkpointLocation", "s3a://gold-bucket/checkpoints/multi_sink_v6") \
+    .trigger(availableNow=True) \
+    .toTable("demo.db.windowed_stats")
+
+# query = df_winda.writeStream \
+#     .foreachBatch(write_to_sinks) \
+#     .option('checkpointLocation', "s3a://gold-bucket/checkpoints/multi_sink_v6") \
+#     .start()
 
 #trigger отработать и съебаться,
 query.awaitTermination()
-
