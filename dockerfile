@@ -15,4 +15,4 @@ RUN export JAVA_HOME
 
 USER airflow
 
-RUN pip install --no-cache-dir apache-airflow-providers-apache-spark pyspark
+RUN pip install --no-cache-dir apache-airflow-providers-apache-spark pyspark kafka-python clickhouse-connect

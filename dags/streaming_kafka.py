@@ -26,8 +26,6 @@ spark = SparkSession.builder \
     .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions") \
     .getOrCreate()
 
-spark.sql("DROP TABLE IF EXISTS demo.db.windowed_stats")
-
 # FROM ICEBERG
 spark.sql("""
     CREATE TABLE IF NOT EXISTS demo.db.windowed_stats (
@@ -49,12 +47,19 @@ spark.sql("""
 
 #FROM CLICKHOUSE
 
+# def write_to_sinks(batch_df, batch_id):
+#     batch_df.writeTo("demo.db.windowed_stats").append()
+#     rows = [row.asDict() for row in batch_df.collect()]
+#     if rows:
+#         client = clickhouse_connect.get_client(host='clickhouse', port=8123)
+#         client.insert('default.windowed_stats_ch', rows)
+
 def write_to_sinks(batch_df, batch_id):
+    print(f"--- НАЧИНАЮ ЗАПИСЬ БАТЧА {batch_id} ---")
+    
+    # 1. Пишем ТОЛЬКО в Iceberg
     batch_df.writeTo("demo.db.windowed_stats").append()
-    rows = [row.asDict() for row in batch_df.collect()]
-    if rows:
-        client = clickhouse_connect.get_client(host='clickhouse', port=8123)
-        client.insert('default.windowed_stats_ch', rows)
+    print(f"--- АЙСБЕРГ ЗАПИСАН ДЛЯ БАТЧА {batch_id} ---")
 
 
 df = spark.readStream \

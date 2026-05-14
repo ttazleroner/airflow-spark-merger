@@ -70,4 +70,8 @@ docker exec -i \\
         python_callable=load_minio
     )
 
-    producer_kafka >> streaming_kafka >> archive_task
+    download_libs = BashOperator(
+        task_id='download_libs',
+        bash_command='docker exec spark_single pip install clickhouse-connect'
+    )
+    download_libs >> producer_kafka >> streaming_kafka >> archive_task
