@@ -10,7 +10,12 @@ db_pass = os.getenv("ICEBERG_DB_PASS")
 
 spark = SparkSession.builder \
     .appName('steam_to_iceberg') \
-    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.2,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.6.0") \
+    .config("spark.jars.packages", 
+            "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,"
+            "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.2,"
+            "org.apache.hadoop:hadoop-aws:3.3.4,"
+            "org.postgresql:postgresql:42.6.0,"
+            "com.clickhouse:clickhouse-jdbc:0.5.0") \
     .config("spark.sql.catalog.demo", "org.apache.iceberg.spark.SparkCatalog") \
     .config("spark.sql.catalog.demo.type", "jdbc") \
     .config("spark.sql.catalog.demo.uri", "jdbc:postgresql://postgres:5432/airflow") \
@@ -45,23 +50,6 @@ spark.sql("""
     )
 """)
 
-# FROM CLICKHOUSE
-
-def write_to_sinks(batch_df, batch_id):
-    batch_df.writeTo("demo.db.windowed_stats").append()
-    rows = [row.asDict() for row in batch_df.collect()]
-    if rows:
-        client = clickhouse_connect.get_client(host='clickhouse', port=8123)
-        client.insert('default.windowed_stats_ch', rows)
-
-def write_to_sinks(batch_df, batch_id):
-    print(f"--- НАЧИНАЮ ЗАПИСЬ БАТЧА {batch_id} ---")
-    
-    # 1. Пишем ТОЛЬКО в Iceberg
-    batch_df.writeTo("demo.db.windowed_stats").append()
-    print(f"--- АЙСБЕРГ ЗАПИСАН ДЛЯ БАТЧА {batch_id} ---")
-
-
 df = spark.readStream \
     .format('kafka') \
     .option('kafka.bootstrap.servers', 'kafka_broker:29092') \
@@ -77,6 +65,39 @@ df_pars = df.select(F.from_json(F.col('value').cast('string'), my_schema).alias(
     .withColumn('event_time', F.from_unixtime(F.col('timestamp')).cast('timestamp'))
 
 
+# FROM CLICKHOUSE
+
+def write_to_iceberg_and_clickhouse(batch_df, batch_id):
+    if batch_df.isEmpty():
+        return
+    
+    batch_df.writeTo("demo.db.windowed_stats").append()
+    batch_df.write \
+        .format("jdbc") \
+        .option("url", "jdbc:clickhouse://clickhouse:8123/default") \
+        .option("dbtable", "windowed_stats_ch") \
+        .option("user", "admin") \
+        .option("password", "admin") \
+        .option("driver", "com.clickhouse.jdbc.ClickHouseDriver") \
+        .mode("append") \
+        .save()
+    
+    ch_df = batch_df \
+        .withColumn("window_start", F.col("window.start")) \
+        .withColumn("window_end", F.col("window.end")) \
+        .drop("window")
+
+    ch_df.write \
+        .format("jdbc") \
+        .option("url", "jdbc:clickhouse://clickhouse:8123/default") \
+        .option("dbtable", "windowed_stats_ch") \
+        .option("user", "admin") \
+        .option("password", "admin") \
+        .option("driver", "com.clickhouse.jdbc.ClickHouseDriver") \
+        .mode("append") \
+        .save()
+
+
 df_winda = df_pars \
     .withWatermark('event_time', '15 minutes') \
     .groupBy(
@@ -85,18 +106,12 @@ df_winda = df_pars \
     ) \
     .agg(F.sum('amount').alias('total_sum'), F.count('id').alias('tx_count'))
 
-
 query = df_winda.writeStream \
-    .format("clickhouse") \
+    .foreachBatch(write_to_iceberg_and_clickhouse) \
     .outputMode("append") \
-    .option("checkpointLocation", "s3a://gold-bucket/checkpoints/multi_sink_v6") \
+    .option("checkpointLocation", "s3a://gold-bucket/checkpoints/multi_sink_v7") \
     .trigger(availableNow=True) \
-    .toTable("demo.db.windowed_stats")
+    .start()
 
-# query = df_winda.writeStream \
-#     .foreachBatch(write_to_sinks) \
-#     .option('checkpointLocation', "s3a://gold-bucket/checkpoints/multi_sink_v6") \
-#     .start()
-
-#trigger отработать и съебаться,
+#trigger отработать и съебаться
 query.awaitTermination()
