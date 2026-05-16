@@ -64,7 +64,6 @@ my_schema = 'id INT, user STRING, amount INT, timestamp LONG, category STRING'
 df_pars = df.select(F.from_json(F.col('value').cast('string'), my_schema).alias('data')).select('data.*') \
     .withColumn('event_time', F.from_unixtime(F.col('timestamp')).cast('timestamp'))
 
-
 # FROM CLICKHOUSE
 
 def write_to_iceberg_and_clickhouse(batch_df, batch_id):
