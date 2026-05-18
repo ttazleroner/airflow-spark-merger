@@ -8,7 +8,9 @@ client = clickhouse_connect.get_client(
 )
 
 
-
+client.command('DROP VIEW IF EXISTS default.raw_transactions_mv ')
+client.command('DROP TABLE IF EXISTS default.raw_transactions_mergetree')
+client.command('DROP TABLE IF EXISTS default.raw_transactions_kafka')
 client.command("""
     CREATE TABLE IF NOT EXISTS default.raw_transactions_mergetree
     (
