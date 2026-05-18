@@ -30,8 +30,8 @@ rn_city = {
         'Nyc': 'New York'
     }
 grb = ['N/a', 'Unknown\t', 'Unknown', 'NULL', '\t']
-rename_cat = ['N/a\t', 'Tech\t']
-valid_cat = ["Retail", "Tech", "Food", "Finance", 'Unknown', 'NoName',]
+rename_cat = ['N/a\t', 'Tech\t', '\t']
+valid_cat = ["Retail", "Tech", "Food", "Finance", 'Unknown', 'NoName', '\t']
 
 # если кайф, напиши вот так. это SctructType, я же использую метод DDL который отпишу ниже, документация снизу
 # https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.types.StructType.html

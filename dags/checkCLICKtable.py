@@ -10,7 +10,7 @@ client = clickhouse_connect.get_client(
 rezultat = client.query("""
     SELECT * FROM default.raw_transactions_mergetree
     ORDER BY event_time DESC
-    LIMIT 10
+    LIMIT 100
 """)
 
 if not rezultat.result_set:

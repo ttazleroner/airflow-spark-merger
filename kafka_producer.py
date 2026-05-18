@@ -33,7 +33,7 @@ with open(csv_file, 'r', encoding='utf-8') as f:
         if i % 2000 == 0:
             print(f"обработано {i} строк")
             producer.flush()
-        if i > 200000: 
+        if i > 40000: 
             break 
 
 producer.flush()
