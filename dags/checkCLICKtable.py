@@ -8,7 +8,7 @@ client = clickhouse_connect.get_client(
 )
 
 rezultat = client.query("""
-    SELECT * FROM default.raw_transactions_mergetree
+    SELECT * FROM default.raw_transactions_mergetree FINAL
     ORDER BY event_time DESC
     LIMIT 100
 """)
