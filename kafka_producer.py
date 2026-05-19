@@ -30,10 +30,10 @@ with open(csv_file, 'r', encoding='utf-8') as f:
             row['category'] = random.choice(cat)
         row['type'] = random.choice(types)
         producer.send('raw_transactions', key=row.get('user'),value=row)
-        if i % 2000 == 0:
+        if i % 40000 == 0:
             print(f"обработано {i} строк")
             producer.flush()
-        if i > 40000: 
+        if i > 80000: 
             break 
 
 producer.flush()

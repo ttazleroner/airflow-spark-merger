@@ -7,8 +7,8 @@ client = clickhouse_connect.get_client(
     password='admin_pass'
 )
 
-client.command('DROP TABLE IF EXISTS default.windowed_stats_summing ')
-client.command('DROP VIEW IF EXISTS default.windowed_stats_mv')
+# client.command('DROP TABLE IF EXISTS default.windowed_stats_summing ')
+# client.command('DROP VIEW IF EXISTS default.windowed_stats_mv')
 
 # в данном случае ORDER BY это ключ \/\/\/\/\/
 client.command("""

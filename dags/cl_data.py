@@ -58,7 +58,7 @@ df = (df
     .withColumn('timestamp', F.to_timestamp(F.col('timestamp')))
     .withColumn('city', F.initcap(F.col('city')))
     .withColumn('category', F.initcap(F.col('category')))
-    .withColumn("category", F.trim(F.regexp_replace(F.col("category"), r"\t", ""))))
+    .withColumn("category", F.upper(F.regexp_replace(F.col("category"), r"\s+", ""))))
 
 df.persist()
 
