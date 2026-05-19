@@ -7,6 +7,7 @@ client = clickhouse_connect.get_client(
     password='admin_pass'
 )
 
+client.command('DROP TABLE IF EXISTS default.windowed_stats_summing ')
 client.command('DROP VIEW IF EXISTS default.windowed_stats_mv')
 
 # в данном случае ORDER BY это ключ \/\/\/\/\/
@@ -15,7 +16,7 @@ client.command("""
     (
         timer DateTime,
         category String,
-        total_sum Float64,
+        total_sum Decimal(18,2),
         tx_count Int64
     )
     ENGINE = SummingMergeTree()
@@ -33,10 +34,10 @@ client.command("""
             INTERVAL 10 MINUTE
         ) AS timer,
         multiIf(
-            trim(category) = '', 'UNKNOWN',
-            upper(trim(category)) = 'N/A', 'UNKNOWN',
-            upper(trim(category)) = 'NULL', 'UNKNOWN',
-            upper(trim(category))
+            upper(replaceRegexpAll(category, '\s+', '')) = '', 'UNKNOWN',
+            upper(replaceRegexpAll(category, '\s+', '')) = 'N/A', 'UNKNOWN',
+            upper(replaceRegexpAll(category, '\s+', '')) = 'NULL', 'UNKNOWN',
+            upper(replaceRegexpAll(category, '\s+', ''))
         ) AS category,
         round (amount, 2) AS total_sum,
         1 AS tx_count
